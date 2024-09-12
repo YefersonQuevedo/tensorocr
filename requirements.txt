@@ -1,0 +1,5 @@
+Flask==3.0.3
+Keras-OCR==0.9.3
+EasyOCR==1.7.1
+matplotlib==3.7.5
+gunicorn
