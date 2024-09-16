@@ -14,7 +14,7 @@ This repository contains a Flask-based API for Optical Character Recognition (OC
 
 Before running this project, ensure you have the following dependencies installed:
 
-- Python 3.x
+- Python 3.19
 - `Flask`
 - `Flask-CORS`
 - `keras-ocr`
