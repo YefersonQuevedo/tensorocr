@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesador de Imágenes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        #dropZone {
+            border: 2px dashed #ccc;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            background-color: white;
+        }
+        #dropZone:hover {
+            background-color: #f9f9f9;
+        }
+        #fileInput {
+            display: none;
+        }
+        #preview {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            display: none;
+        }
+        #resultImage {
+            max-width: 100%;
+        }
+        button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>Procesador de Imágenes</h1>
+    <div id="dropZone">
+        <p>Arrastra y suelta una imagen aquí o haz clic para seleccionar</p>
+        <input type="file" id="fileInput" accept="image/png, image/jpeg">
+    </div>
+    <img id="preview" alt="Vista previa de la imagen" style="display: none;">
+    <div>
+        <button id="kerasButton" disabled>Procesar con Keras OCR</button>
+        <button id="easyOCRButton" disabled>Procesar con EasyOCR</button>
+    </div>
+    <div id="result">
+        <h2>Resultado:</h2>
+        <p id="resultText"></p>
+        <img id="resultImage" alt="Imagen procesada">
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const kerasButton = document.getElementById('kerasButton');
+        const easyOCRButton = document.getElementById('easyOCRButton');
+        const result = document.getElementById('result');
+        const resultText = document.getElementById('resultText');
+        const resultImage = document.getElementById('resultImage');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#4CAF50';
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#ccc';
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#ccc';
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                        kerasButton.disabled = false;
+                        easyOCRButton.disabled = false;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    alert('Por favor, selecciona una imagen válida.');
+                }
+            }
+        }
+
+        kerasButton.addEventListener('click', () => processImage('keras'));
+        easyOCRButton.addEventListener('click', () => processImage('easyocr'));
+
+        async function processImage(ocrMethod) {
+            kerasButton.disabled = true;
+            easyOCRButton.disabled = true;
+            kerasButton.textContent = 'Procesando...';
+            easyOCRButton.textContent = 'Procesando...';
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            formData.append('ocr_method', ocrMethod);
+
+            try {
+                const response = await fetch('https://963b-35-232-233-80.ngrok-free.app/procesar-imagen', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('La respuesta de la red no fue correcta.');
+                }
+
+                const data = await response.json();
+                resultText.textContent = `Texto: ${data.text}`;
+                resultImage.src = data.image_url;
+                resultImage.onload = () => {  
+                    result.style.display = 'block';
+                };
+            } catch (error) {
+                console.error('Hubo un problema con la operación fetch:', error);
+                resultText.textContent = 'Hubo un error al procesar la imagen.';
+                resultImage.src = '';
+            }
+
+            kerasButton.textContent = 'Procesar con Keras OCR';
+            easyOCRButton.textContent = 'Procesar con EasyOCR';
+            kerasButton.disabled = false;
+            easyOCRButton.disabled = false;
+        }
+    </script>
+</body>
+</html>
