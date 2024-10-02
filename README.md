@@ -53,7 +53,7 @@ easyocr: To use the EasyOCR OCR model.
 Example request:
 When you send the POST request to /procesar-imagen, it must include the image and the ocr_method field. This is how it would look in curl:
 ```
-curl -X POST http://localhost:5000/procesar-imagen \
+curl -X POST https://963b-35-232-233-80.ngrok-free.app/procesar-imagen \
   -F “image=@path_to_your_image.jpg” \
   -F “ocr_method=keras” # or “ocr_method=easyocr”
 ```
